@@ -20,11 +20,7 @@ batch_run_func <- function(w, t, number_of_agents,
   try(if(signif(sum(w), digits = 6) != 1) stop("Your weights don't add up to 1!"))
   
   initialise_vars() # create variables which will store output
-  
-  #  if (run_w_cap == TRUE) {
-  #    FiT_0 <<- FiT
-  #    dep_cap_0 <<- dep_cap
-  #  }
+
   
   for (i in 1:number_of_runs) {
     
