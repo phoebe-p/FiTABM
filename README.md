@@ -3,7 +3,9 @@ An agent-based model, implemented in R, for modelling the effect of feed-in tari
 
 ## Getting started
 If you don't have R installed, do that: https://cran.rstudio.com/
+
 To make your life easier, also download RStudio: https://www.rstudio.com/products/rstudio/download/
+
 Although FiTABM was written in RStudio, there is no reason it won't work in a different IDE/from the command line.
 
 Once you have R/RStudio and the right packages:
