@@ -21,6 +21,7 @@ Once you have R/RStudio and the right packages:
     readr, dplyr, purrr, ggplot2, stringr, reshape2, lubridate, magrittr
     
     You can install these yourself, e.g by running the following line of R code:
+    
     install.packages(c("readr", "dplyr", "purrr", "ggplot2", "stringr", "reshape2", "lubridate", "magrittr"))
 
 5.  To actually load the functions into your environment, run all the contents of 01-required_functions.R and 02-run_functions.R. All the functions you need are now in your Global Environment.
