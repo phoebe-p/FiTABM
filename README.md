@@ -24,7 +24,9 @@ Once you have R/RStudio and the right packages:
     
     install.packages(c("readr", "dplyr", "purrr", "ggplot2", "stringr", "reshape2", "lubridate", "magrittr"))
 
-5.  To actually load the functions into your environment, run all the contents of 01-required_functions.R and 02-run_functions.R. All the functions you need are now in your Global Environment.
+5.  To actually load the functions into your environment, run all the contents of 01-required_functions.R and 02-run_functions.R. In RStudio, simply open the script and use Ctrl/Cmd + A, Ctrl/Cmd + Enter. All the functions you need are now in your Global Environment.
+
+6.  Now you can start running simulations!
   
     
 
