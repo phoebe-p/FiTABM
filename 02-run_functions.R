@@ -97,7 +97,7 @@ batch_run_func <- function(w, t, number_of_agents,
   }
   
   if (run_w_cap == TRUE) {
-    avg_FiT <- FiT_levels %>% group_by(time_series) %>% summarise(FiT = mean(FiT))
+    avg_FiT <<- FiT_levels %>% group_by(time_series) %>% summarise(FiT = mean(FiT))
     print(ggplot() + geom_line(data = FiT_levels, aes(x = time_series, y = FiT, group = run_number,
                                                       color = run_number)) +
             geom_line(data = avg_FiT, aes(x=time_series, y = FiT), size = 1))
