@@ -74,7 +74,7 @@ batch_run_func <- function(w, t, number_of_agents,
           geom_line(data = avg_u, 
                     aes(x = time_series, y = avg_inst_cap, group = run_number), alpha = 0.2) +
           geom_line(data = averages, aes(x = time_series, y = avg_inst_cap)) +
-          geom_line(data = deployment, aes(x = time_series, y = avg_cap)) + ylim(0, 4))
+          geom_line(data = deployment, aes(x = time_series, y = avg_cap)))
   
   if (plot_cost == T){
     print(ggplot() + theme_bw() + 
@@ -438,7 +438,7 @@ batch_run_func_f <- function(w, t, agent_name,
           geom_line(data = avg_u, 
                     aes(x = time_series, y = avg_inst_cap, group = run_number), alpha = 0.2) +
           geom_line(data = averages, aes(x = time_series, y = avg_inst_cap)) +
-          geom_line(data = deployment, aes(x = time_series, y = avg_cap)) + ylim(0, 4))
+          geom_line(data = deployment, aes(x = time_series, y = avg_cap)))
   
   if (plot_cost == T){
     print(ggplot() + theme_bw() + 
