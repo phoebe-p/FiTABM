@@ -24,9 +24,28 @@ Once you have R/RStudio and the right packages:
     
     install.packages(c("readr", "dplyr", "purrr", "ggplot2", "stringr", "reshape2", "lubridate", "magrittr"))
 
-5.  To actually load the functions into your environment, run all the contents of 01-required_functions.R and 02-run_functions.R. In RStudio, simply open the script and use Ctrl/Cmd + A, Ctrl/Cmd + Enter. All the functions you need are now in your Global Environment.
+5.  To actually load the functions into your global environment, run all the contents of 01-required_functions.R and 02-run_functions.R (Ctrl/Cmd + A, Ctrl/Cmd + Enter in RStudio). All the functions you need are now in your Global Environment.
 
 6.  Now you can start running simulations!
+
+## File list
+
+1. FiTABM.Rproj -- RStudio project
+2. 01-required_functions.R -- contains most of the necessary functions, except those for running in batches & actually executing the model.
+3. 02-run_functions.R -- contains the functions for individual and batch runs; all functions called by the individual run function are defined in 01-required_functions.R
+4. all_inst_1.csv and all_inst_2.csv -- data on individual PV installations in the UK. Big files!
+5. electricityprices.csv -- estimated electricity prices in the UK (annual, 2010-2016)
+6. FiT_levels.csv -- Real feed-in tariff (FiT) levels in Great Britain (monthly, 2010-2016)
+7. Incomelist.csv -- Income percentiles for the UK population
+8. LF_mean.csv -- Solar PV load factors per GB region
+9. mean-electricity.csv -- Mean electricity consumption, depending on household size and income
+10. median-electricity.csv -- Median electricity consumption, depending on household size and income
+11. owner_occupiers.csv -- number of households which occupy a home they own, in Great Britain (annual, 2010-2016)
+12. population_mid2012.csv -- population estimates per GB region, from 2012
+13. PV_cost_data_est.csv -- PV cost data used in the model (monthly, 2010-2016)
+14. real_dep_cap.csv -- Deployment caps implement on FiT scheme from October 2016
+15. README.md -- this file.
+
   
     
 

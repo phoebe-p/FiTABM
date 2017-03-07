@@ -445,10 +445,6 @@ cap_utility <- function(A) {
   u_cap <- 1/(1+exp(-(0.2*A$income-A$inst_cap*kW_price_current)*0.0007))
 }
 
-ec_utility <- function(A) {
-  u_ec <- 1/(1+exp(-(10-pp)*0.4))
-}
-
 #---------------------------- 1.3 Cost calculation ------------------------------#
 subs_cost <- function(adpts, rn, number_of_agents) {
   if (length(adpts) > 0) {
