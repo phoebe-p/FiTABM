@@ -41,15 +41,15 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
   if(init_fit < 0 | final_fit <0) stop("FiTs have to be positive")
   
   
-  elec_price_time <<- read_csv("electricityprices.csv", col_names = F, col_types = cols())
+  elec_price_time <<- read_csv("Data/electricityprices.csv", col_names = F, col_types = cols())
   elec_price_time[7,] <<- c(2016, 17.33) # projection for 2016
   
-  owner_occupiers <<- read_csv("owner_occupiers.csv", col_names = F, col_types = cols()) %>% mutate(X2 = X2*1000)
+  owner_occupiers <<- read_csv("Data/owner_occupiers.csv", col_names = F, col_types = cols()) %>% mutate(X2 = X2*1000)
   
   #---------------------------------------------------------#
   # Load factor data
   
-  LF <- read_csv("LF_mean.csv", col_types = cols())
+  LF <- read_csv("Data/LF_mean.csv", col_types = cols())
   
   # Filter out empty rows, group by region, find mean & std. dev. over all years, arrange
   # in alphabetical order.
@@ -62,7 +62,7 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
   # Income data
   
   
-  income_data <<- read_csv("Incomelist.csv", col_names = FALSE, col_types = cols())
+  income_data <<- read_csv("Data/Incomelist.csv", col_names = FALSE, col_types = cols())
   
   
   #---------------------------------------------------------#
@@ -84,7 +84,7 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
   
   # Population data
   
-  population <- read_csv("population_mid2012.csv", col_names = FALSE, col_types = cols()) %>% arrange(X1)
+  population <- read_csv("Data/population_mid2012.csv", col_names = FALSE, col_types = cols()) %>% arrange(X1)
   
   region_weights <<- population$X2/sum(population$X2)
   
@@ -92,15 +92,15 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
   
   #---------------------------------------------------------#
   # PV cost data
-  kW_price <<- read_csv('PV_cost_data_est.csv', col_names = FALSE, col_types = cols()) %>% mutate(X1 = dmy(X1)) %>%
+  kW_price <<- read_csv('Data/PV_cost_data_est.csv', col_names = FALSE, col_types = cols()) %>% mutate(X1 = dmy(X1)) %>%
     filter(X1 >= start_date) 
   
   
   #---------------------------------------------------------#
   # Electricity use data
   
-  means <- read_csv("mean-electricity.csv", col_types = cols())
-  medians <- read_csv("median-electricity.csv", col_types = cols())
+  means <- read_csv("Data/mean-electricity.csv", col_types = cols())
+  medians <- read_csv("Data/median-electricity.csv", col_types = cols())
   
   mus <<- data.frame(matrix(ncol = 5, nrow = 10))
   sigmas <<- data.frame(matrix(ncol = 5, nrow = 10))
@@ -156,8 +156,8 @@ load_libraries <- function(){
 }
 
 process_inst_data <- function(){
-  a <- read_csv("all_inst_1.csv", skip = 2, col_types = cols())
-  b <- read_csv("all_inst_2.csv", skip = 2, col_types = cols())
+  a <- read_csv("Data/all_inst_1.csv", skip = 2, col_types = cols())
+  b <- read_csv("Data/all_inst_2.csv", skip = 2, col_types = cols())
   
   all_inst <- rbind(a, b)
   
@@ -183,7 +183,7 @@ set_FiT <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, init
   }
   time_series <- seq(start_date, FiT_end_date, by = '1 month')
   if (FiT_type == "real_h"){
-    FiT <<- rbind(read_csv("FiT_levels.csv", col_types = cols()) %>% mutate(time_series = dmy(time_series)) %>% 
+    FiT <<- rbind(read_csv("Data/FiT_levels.csv", col_types = cols()) %>% mutate(time_series = dmy(time_series)) %>% 
                     filter(time_series <= end_date), FiT_zero)
   }
   
@@ -229,14 +229,14 @@ set_dep_caps <- function(start_date, end_date, FiT_end_date, FiT_type, cap, exp_
   
   if (FiT_type == "real_f"){
     
-    dep_cap <- read_csv("real_dep_cap.csv", skip = 1, col_names = c("q_dates", "orig_cap", "FiT"), col_types = cols()) 
+    dep_cap <- read_csv("Data/real_dep_cap.csv", skip = 1, col_names = c("q_dates", "orig_cap", "FiT"), col_types = cols()) 
     dep_cap %<>% mutate(cap = orig_cap, inst_cap = NA) %>%
       mutate(q_dates = dmy(q_dates))
     FiT_list <- dep_cap$FiT
     dep_cap_n <- dep_cap %<>% select(q_dates, orig_cap, cap, inst_cap)
     
   } else if (FiT_type == "real_f_ext") {
-    dep_cap <- read_csv("real_dep_cap.csv", skip = 1, col_names = c("q_dates", "orig_cap", "FiT"), 
+    dep_cap <- read_csv("Data/real_dep_cap.csv", skip = 1, col_names = c("q_dates", "orig_cap", "FiT"), 
                         col_types = cols()) %>% mutate(q_dates = dmy(q_dates)) %>% select(q_dates, orig_cap)
     dep_cap_ext <- data.frame(q_dates = seq(dmy("1apr2019"), dmy("1jan2021"), by = '3 month'),
                               orig_cap = 62.1:69.1)
@@ -880,18 +880,18 @@ load_data_f <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, 
   
   #---------------------------------------------------------#
   
-  elec_price_time <- read_csv("electricityprices.csv", col_names = F, col_types = cols())
+  elec_price_time <- read_csv("Data/electricityprices.csv", col_names = F, col_types = cols())
   elec_price_time[7,] <- c(2016, 17.33) # projection for 2016
   elec_price_time <<- future_elec_price(elec_price_time, elec_trend)
   
-  owner_occupiers <- read_csv("owner_occupiers.csv", col_names = F, col_types = cols()) %>% mutate(X2 = X2*1000)
+  owner_occupiers <- read_csv("Data/owner_occupiers.csv", col_names = F, col_types = cols()) %>% mutate(X2 = X2*1000)
   
   owner_occupiers <<- data.frame(X1 = time_years, 
                                  X2 = owner_occupiers$X2[[7]])
   #---------------------------------------------------------#
   # Load factor data
   
-  LF <- read_csv("LF_mean.csv", col_types = cols())
+  LF <- read_csv("Data/LF_mean.csv", col_types = cols())
   
   # Filter out empty rows, group by region, find mean & std. dev. over all years, arrange
   # in alphabetical order.
@@ -904,7 +904,7 @@ load_data_f <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, 
   # Income data
   
   
-  income_data <<- read_csv("Incomelist.csv", col_names = FALSE, col_types = cols())
+  income_data <<- read_csv("Data/Incomelist.csv", col_names = FALSE, col_types = cols())
   
   
   #---------------------------------------------------------#
@@ -924,7 +924,7 @@ load_data_f <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, 
   #---------------------------------------------------------#
   # Population data
   
-  population <- read_csv("population_mid2012.csv", col_names = FALSE, col_types = cols()) %>% arrange(X1)
+  population <- read_csv("Data/population_mid2012.csv", col_names = FALSE, col_types = cols()) %>% arrange(X1)
   
   region_weights <<- population$X2/sum(population$X2)
   
@@ -932,15 +932,15 @@ load_data_f <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, 
   
   #---------------------------------------------------------#
   # PV cost data
-  init_PV <- read_csv('PV_cost_data_est.csv', col_names = FALSE, col_types = cols()) %>% mutate(X1 = dmy(X1)) 
+  init_PV <- read_csv('Data/PV_cost_data_est.csv', col_names = FALSE, col_types = cols()) %>% mutate(X1 = dmy(X1)) 
   
   kW_price <<- future_PV_price(init_PV, PV_trend, start_date, end_date)
   
   #---------------------------------------------------------#
   # Electricity use data
   
-  means <- read_csv("mean-electricity.csv", col_types = cols())
-  medians <- read_csv("median-electricity.csv", col_types = cols())
+  means <- read_csv("Data/mean-electricity.csv", col_types = cols())
+  medians <- read_csv("Data/median-electricity.csv", col_types = cols())
   
   mus <<- data.frame(matrix(ncol = 5, nrow = 10))
   sigmas <<- data.frame(matrix(ncol = 5, nrow = 10))
@@ -1366,7 +1366,7 @@ calc_LCOE_f <- function(adpts, rn, number_of_agents) {
 
 which_PV_cost_f <- function(x) {
   
-  kW_price_h <- read_csv('PV_cost_data_est.csv', col_names = FALSE, col_types = "cd") %>% 
+  kW_price_h <- read_csv('Data/PV_cost_data_est.csv', col_names = FALSE, col_types = "cd") %>% 
     mutate(X1 = dmy(X1)) %>% filter(X1 < kW_price$X1[1])
   
   kW_price_all <- rbind(kW_price, kW_price_h)
@@ -1376,7 +1376,7 @@ which_PV_cost_f <- function(x) {
   
 }
 which_owner_year_f <- function(x) {
-  owner_occupier_h <- read_csv("owner_occupiers.csv", col_names = F, col_types = "in") %>% 
+  owner_occupier_h <- read_csv("Data/owner_occupiers.csv", col_names = F, col_types = "in") %>% 
     mutate(X2 = X2*1000)
   owner_occupier_all <- rbind(owner_occupier_h, owner_occupiers)
   owner_occupier_all$X2[owner_occupier_all$X1 == as.numeric(year(x))][1]

@@ -130,6 +130,16 @@ batch_run_func <- function(w, t, number_of_agents,
   tot_priv_cost <<- tail(avg_cost_priv$cum_cost, 1)
   tot_overall_cost <<- tot_subs_cost + tot_priv_cost
   
+  dep_sd <- sd(avg_u$tot_inst_cap[avg_u$time_series == max(avg_u$time_series)])
+  subs_sd <- cost %>% group_by(run_number) %>% summarise(subs = sum(annual_cost)/12) %>% 
+    select(subs) %>% unlist %>% sd
+  priv_sd <- cost_priv %>% group_by(run_number) %>% summarise(priv = max(cum_cost)) %>% 
+    select(priv) %>% unlist %>% sd
+  ann_sd <- cost %>% group_by(run_number) %>% summarise(ann = max(annual_cost)) %>%
+    select(ann) %>% unlist %>% sd 
+  prod_sd <- cum_prod %>% group_by(run_number) %>% summarise(prod = sum(current_prod)/12) %>%
+    select(prod) %>% unlist %>% sd
+  
   cat("Final deployment at ", as.character(tail(averages$time_series, 1)), " (MW) = ", 
       tail(averages$tot_inst_cap, 1), " +/- ", dep_sd, "\n",
       "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, " +/- ", subs_sd/1e9, "\n",
@@ -512,6 +522,16 @@ batch_run_func_f <- function(w, t, agent_name,
   tot_subs_cost <<- sum(avg_cost$annual_cost)/12
   tot_priv_cost <<- tail(avg_cost_priv$cum_cost, 1)
   tot_overall_cost <<- tot_subs_cost + tot_priv_cost
+  
+  dep_sd <- sd(avg_u$tot_inst_cap[avg_u$time_series == max(avg_u$time_series)])
+  subs_sd <- cost %>% group_by(run_number) %>% summarise(subs = sum(annual_cost)/12) %>% 
+    select(subs) %>% unlist %>% sd
+  priv_sd <- cost_priv %>% group_by(run_number) %>% summarise(priv = max(cum_cost)) %>% 
+    select(priv) %>% unlist %>% sd
+  ann_sd <- cost %>% group_by(run_number) %>% summarise(ann = max(annual_cost)) %>%
+    select(ann) %>% unlist %>% sd 
+  prod_sd <- cum_prod %>% group_by(run_number) %>% summarise(prod = sum(current_prod)/12) %>%
+    select(prod) %>% unlist %>% sd
   
   cat("Final deployment at ", as.character(tail(averages$time_series, 1)), " (MW) = ", 
       tail(averages$tot_inst_cap, 1), " +/- ", dep_sd, "\n",
