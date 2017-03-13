@@ -20,7 +20,6 @@ batch_run_func <- function(w, t, number_of_agents,
   try(if(signif(sum(w), digits = 6) != 1) stop("Your weights don't add up to 1!"))
   
   initialise_vars() # create variables which will store output
-
   
   for (i in 1:number_of_runs) {
     
@@ -58,23 +57,24 @@ batch_run_func <- function(w, t, number_of_agents,
   
   if(plot_u == T){
     u_vars <- c("inc", "soc", "ec", "cap", "tot") # partial and total utilities
-    
+    yl <- c(expression(u[inc]), expression(u[soc]), expression(u[ec]), expression(u[cap]), expression(u[tot]))
+    l <- 1
     for (app in u_vars) { # plot average over time of utility functions
+      
       p <- ggplot() + theme_bw() +
         geom_line(data = avg_u,
                   aes(x = time_series, y = get(paste("mean_u_", app, sep = "")), 
-                      group = run_number, color = run_number)) +
-        geom_line(data = averages, aes(x = time_series, y = get(paste("u_", app, sep = "")))) +
-        ylab(paste("u_", app, sep = "")) 
+                      group = run_number), alpha = 0.2) +
+        geom_line(data = averages, aes(x = time_series, y = get(paste("u_", app, sep = ""))), size = 1) +
+        geom_ribbon(data = averages, aes(x = time_series, 
+                                         ymin = get(paste("u_", app, sep = "")) - get(paste("sd_u_", app, sep = "")),
+                                         ymax = get(paste("u_", app, sep = "")) + get(paste("sd_u_", app, sep = ""))),
+                    alpha = 0.15) +
+        ylab(yl[l]) + xlab("Date") + theme(legend.position = "none") + coord_cartesian(expand = F) 
       print(p)
+      l <- l+1
     }
   }
-  
-  print(ggplot() + theme_bw() + 
-          geom_line(data = avg_u, 
-                    aes(x = time_series, y = avg_inst_cap, group = run_number), alpha = 0.2) +
-          geom_line(data = averages, aes(x = time_series, y = avg_inst_cap)) +
-          geom_line(data = deployment, aes(x = time_series, y = avg_cap)))
   
   if (plot_cost == T){
     print(ggplot() + theme_bw() + 
@@ -131,12 +131,12 @@ batch_run_func <- function(w, t, number_of_agents,
   tot_overall_cost <<- tot_subs_cost + tot_priv_cost
   
   cat("Final deployment at ", as.character(tail(averages$time_series, 1)), " (MW) = ", 
-      tail(averages$tot_inst_cap, 1), "\n",
-      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, "\n",
-      "Total private cost (billion £) = ", tot_priv_cost/1e9, "\n",
+      tail(averages$tot_inst_cap, 1), " +/- ", dep_sd, "\n",
+      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, " +/- ", subs_sd/1e9, "\n",
+      "Total private cost (billion £) = ", tot_priv_cost/1e9, " +/- ", priv_sd/1e9, "\n",
       "Total cost (billions £) = ", tot_overall_cost/1e9, "\n",
-      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, "\n",
-      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), "\n",
+      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, " +/- ", ann_sd/1e6, "\n",
+      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), " +/- ", prod_sd/1e6, "\n",
       "Weighted LCOE (£/MWh) = ", mean(LCOE_avg), "\n",
       sep = "")
   
@@ -187,6 +187,11 @@ run_model <- function(number_of_agents, rn, w, threshold) {
                       mean_u_soc = vector(length = time_steps),
                       mean_u_cap = vector(length = time_steps),
                       mean_u_tot = vector(length = time_steps),
+                      sd_u_inc = vector(length = time_steps),
+                      sd_u_ec = vector(length = time_steps),
+                      sd_u_soc = vector(length = time_steps),
+                      sd_u_cap = vector(length = time_steps),
+                      sd_u_tot = vector(length = time_steps),
                       frac_of_adopters = vector(length = time_steps),
                       avg_inst_cap = vector(length = time_steps),
                       tot_inst_cap = vector(length = time_steps),
@@ -228,6 +233,11 @@ run_model <- function(number_of_agents, rn, w, threshold) {
     avg_u$mean_u_soc[i] <- mean(extract(agents, "u_soc"))
     avg_u$mean_u_cap[i] <- mean(extract(agents, "u_cap"))
     avg_u$mean_u_tot[i] <- mean(extract(agents, "u_tot"))
+    avg_u$sd_u_ec[i] <- sd(extract(agents, "u_ec"))
+    avg_u$sd_u_inc[i] <- sd(extract(agents, "u_inc"))
+    avg_u$sd_u_soc[i] <- sd(extract(agents, "u_soc"))
+    avg_u$sd_u_cap[i] <- sd(extract(agents, "u_cap"))
+    avg_u$sd_u_tot[i] <- sd(extract(agents, "u_tot"))
     
     if (length(adopters) > 0){
       avg_u$avg_inst_cap[i] <- mean(extract(adopters, "inst_cap"))
@@ -422,15 +432,22 @@ batch_run_func_f <- function(w, t, agent_name,
   
   if(plot_u == T){
     u_vars <- c("inc", "soc", "ec", "cap", "tot") # partial and total utilities
-    
+    yl <- c(expression(u[inc]), expression(u[soc]), expression(u[ec]), expression(u[cap]), expression(u[tot]))
+    l <- 1
     for (app in u_vars) { # plot average over time of utility functions
+      
       p <- ggplot() + theme_bw() +
         geom_line(data = avg_u,
                   aes(x = time_series, y = get(paste("mean_u_", app, sep = "")), 
-                      group = run_number, color = run_number)) +
-        geom_line(data = averages, aes(x = time_series, y = get(paste("u_", app, sep = "")))) +
-        ylab(paste("u_", app, sep = "")) 
+                      group = run_number), alpha = 0.2) +
+        geom_line(data = averages, aes(x = time_series, y = get(paste("u_", app, sep = ""))), size = 1) +
+        geom_ribbon(data = averages, aes(x = time_series, 
+                                         ymin = get(paste("u_", app, sep = "")) - get(paste("sd_u_", app, sep = "")),
+                                         ymax = get(paste("u_", app, sep = "")) + get(paste("sd_u_", app, sep = ""))),
+                    alpha = 0.15) +
+        ylab(yl[l]) + xlab("Date") + theme(legend.position = "none") + coord_cartesian(expand = F) 
       print(p)
+      l <- l+1
     }
   }
   
@@ -497,12 +514,12 @@ batch_run_func_f <- function(w, t, agent_name,
   tot_overall_cost <<- tot_subs_cost + tot_priv_cost
   
   cat("Final deployment at ", as.character(tail(averages$time_series, 1)), " (MW) = ", 
-      tail(averages$tot_inst_cap, 1), "\n",
-      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, "\n",
-      "Total private cost (billion £) = ", tot_priv_cost/1e9, "\n",
+      tail(averages$tot_inst_cap, 1), " +/- ", dep_sd, "\n",
+      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, " +/- ", subs_sd/1e9, "\n",
+      "Total private cost (billion £) = ", tot_priv_cost/1e9, " +/- ", priv_sd/1e9, "\n",
       "Total cost (billions £) = ", tot_overall_cost/1e9, "\n",
-      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, "\n",
-      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), "\n",
+      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, " +/- ", ann_sd/1e6, "\n",
+      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), " +/- ", prod_sd/1e6, "\n",
       "Weighted LCOE (£/MWh) = ", mean(LCOE_avg), "\n",
       sep = "")
   
@@ -546,9 +563,15 @@ run_model_f <- function(agent_name, rn, w, threshold) {
                       mean_u_soc = vector(length = time_steps),
                       mean_u_cap = vector(length = time_steps),
                       mean_u_tot = vector(length = time_steps),
+                      sd_u_inc = vector(length = time_steps),
+                      sd_u_ec = vector(length = time_steps),
+                      sd_u_soc = vector(length = time_steps),
+                      sd_u_cap = vector(length = time_steps),
+                      sd_u_tot = vector(length = time_steps),
                       frac_of_adopters = vector(length = time_steps),
                       avg_inst_cap = vector(length = time_steps),
-                      tot_inst_cap = vector(length = time_steps))
+                      tot_inst_cap = vector(length = time_steps)
+  )
   
   
   #---------------------------------------------------------#
@@ -587,6 +610,11 @@ run_model_f <- function(agent_name, rn, w, threshold) {
     avg_u$mean_u_soc[i] <- mean(extract(agents, "u_soc"))
     avg_u$mean_u_cap[i] <- mean(extract(agents, "u_cap"))
     avg_u$mean_u_tot[i] <- mean(extract(agents, "u_tot"))
+    avg_u$sd_u_ec[i] <- sd(extract(agents, "u_ec"))
+    avg_u$sd_u_inc[i] <- sd(extract(agents, "u_inc"))
+    avg_u$sd_u_soc[i] <- sd(extract(agents, "u_soc"))
+    avg_u$sd_u_cap[i] <- sd(extract(agents, "u_cap"))
+    avg_u$sd_u_tot[i] <- sd(extract(agents, "u_tot"))
     
     if (length(adopters) > 0){
       avg_u$avg_inst_cap[i] <- mean(extract(adopters, "inst_cap"))

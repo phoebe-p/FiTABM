@@ -659,10 +659,16 @@ calc_prod <- function(indiv_data, number_of_runs){
 }
 
 summarise_results <- function(avg_u, cost, cost_priv){
+  number_of_runs <- max(as.numeric(avg_u$run_number))
   averages <<- avg_u %>% group_by(time_series) %>% 
     summarise(u_inc = mean(mean_u_inc), u_ec = mean(mean_u_ec), u_soc = mean(mean_u_soc),
               u_cap = mean(mean_u_cap),
               u_tot = mean(mean_u_tot), avg_inst_cap = mean(avg_inst_cap, na.rm = TRUE),  
+              sd_u_inc = sqrt(sum(sd_u_inc^2))/number_of_runs,
+              sd_u_ec = sqrt(sum(sd_u_ec^2))/number_of_runs,
+              sd_u_soc = sqrt(sum(sd_u_soc^2))/number_of_runs,
+              sd_u_cap = sqrt(sum(sd_u_cap^2))/number_of_runs,
+              sd_u_tot = sqrt(sum(sd_u_tot^2))/number_of_runs,
               tot_inst_cap = mean(tot_inst_cap, na.rm = TRUE), 
               frac_of_adopters = mean(frac_of_adopters, na.rm = TRUE),
               inst_cap_diff = mean(inst_cap_diff, na.rm = TRUE))
@@ -671,6 +677,7 @@ summarise_results <- function(avg_u, cost, cost_priv){
   
   avg_cost_priv <<- cost_priv %>% group_by(time_series) %>% summarise(cum_cost = mean(cum_cost))
 }
+
 
 
 load_plot_sim_data <- function(save_name, plot_u = T, plot_cost = T, plot_prod = T){
@@ -716,12 +723,17 @@ load_plot_sim_data <- function(save_name, plot_u = T, plot_cost = T, plot_prod =
     yl <- c(expression(u[inc]), expression(u[soc]), expression(u[ec]), expression(u[cap]), expression(u[tot]))
     l <- 1
     for (app in u_vars) { # plot average over time of utility functions
+      
       p <- ggplot() + theme_bw() +
         geom_line(data = avg_u,
                   aes(x = time_series, y = get(paste("mean_u_", app, sep = "")), 
-                      group = run_number, color = run_number)) +
-        geom_line(data = averages, aes(x = time_series, y = get(paste("u_", app, sep = "")))) +
-        ylab(yl[l]) + xlab("Date") + theme(legend.position = "none")
+                      group = run_number), alpha = 0.2) +
+        geom_line(data = averages, aes(x = time_series, y = get(paste("u_", app, sep = ""))), size = 1) +
+        geom_ribbon(data = averages, aes(x = time_series, 
+                                         ymin = get(paste("u_", app, sep = "")) - get(paste("sd_u_", app, sep = "")),
+                                         ymax = get(paste("u_", app, sep = "")) + get(paste("sd_u_", app, sep = ""))),
+                    alpha = 0.15) +
+        ylab(yl[l]) + xlab("Date") + theme(legend.position = "none") + coord_cartesian(expand = F) 
       print(p)
       l <- l+1
     }
@@ -778,18 +790,31 @@ load_plot_sim_data <- function(save_name, plot_u = T, plot_cost = T, plot_prod =
             geom_line(data = avg_FiT, aes(x=time_series, y = FiT), size = 1))
   }
   
+  
+  dep_sd <- sd(avg_u$tot_inst_cap[avg_u$time_series == max(avg_u$time_series)])
+  subs_sd <- cost %>% group_by(run_number) %>% summarise(subs = sum(annual_cost)/12) %>% 
+    select(subs) %>% unlist %>% sd
+  priv_sd <- cost_priv %>% group_by(run_number) %>% summarise(priv = max(cum_cost)) %>% 
+    select(priv) %>% unlist %>% sd
+  ann_sd <- cost %>% group_by(run_number) %>% summarise(ann = max(annual_cost)) %>%
+    select(ann) %>% unlist %>% sd 
+  prod_sd <- cum_prod %>% group_by(run_number) %>% summarise(prod = sum(current_prod)/12) %>%
+    select(prod) %>% unlist %>% sd
+  
+  
   cat("Final deployment at ", as.character(tail(averages$time_series, 1)), " (MW) = ", 
-      tail(averages$tot_inst_cap, 1), "\n",
-      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, "\n",
-      "Total private cost (billion £) = ", tot_priv_cost/1e9, "\n",
+      tail(averages$tot_inst_cap, 1), " +/- ", dep_sd, "\n",
+      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, " +/- ", subs_sd/1e9, "\n",
+      "Total private cost (billion £) = ", tot_priv_cost/1e9, " +/- ", priv_sd/1e9, "\n",
       "Total cost (billions £) = ", tot_overall_cost/1e9, "\n",
-      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, "\n",
-      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), "\n",
+      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, " +/- ", ann_sd/1e6, "\n",
+      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), " +/- ", prod_sd/1e6, "\n",
       "Weighted LCOE (£/MWh) = ", mean(LCOE_avg), "\n",
       sep = "")
   
   
 }
+
 
 ##################################################################################
 ######################## 2. Future scenarios - functions #########################
@@ -1143,9 +1168,9 @@ run_model_gen <- function(number_of_agents, rn, w, threshold, n_in, dev, agent_n
   
   for (i in 1:time_steps) {
     # set parameters for current time
-    FiT_current_small <<- FiT$FiT[[i]]/100 # p to Â£
+    FiT_current_small <<- FiT$FiT[[i]]/100 # p to £
     FiT_current_large <<- FiT$FiT_large[[i]]/100
-    exp_tar_current <<- FiT$exp_tar[[i]]/100 # p to Â£
+    exp_tar_current <<- FiT$exp_tar[[i]]/100 # p to £
     kW_price_current <<- kW_price$X2[i]
     current_date <<- FiT$time_series[i]
     elec_index <- which(sapply(elec_price_time$X1, function(x) grep(x, current_date)) == 1)
@@ -1362,8 +1387,14 @@ which_owner_year_f <- function(x) {
 #------------------------------- 2.4 Processing ---------------------------------#
 
 summarise_results_f <- function(avg_u, cost, cost_priv){
+  number_of_runs <- max(as.numeric(avg_u$run_number))
   averages <<- avg_u %>% group_by(time_series) %>% 
     summarise(u_inc = mean(mean_u_inc), u_ec = mean(mean_u_ec), u_soc = mean(mean_u_soc),
+              sd_u_inc = sqrt(sum(sd_u_inc^2))/number_of_runs,
+              sd_u_ec = sqrt(sum(sd_u_ec^2))/number_of_runs,
+              sd_u_soc = sqrt(sum(sd_u_soc^2))/number_of_runs,
+              sd_u_cap = sqrt(sum(sd_u_cap^2))/number_of_runs,
+              sd_u_tot = sqrt(sum(sd_u_tot^2))/number_of_runs,
               u_cap = mean(mean_u_cap),
               u_tot = mean(mean_u_tot), avg_inst_cap = mean(avg_inst_cap, na.rm = TRUE),  
               tot_inst_cap = mean(tot_inst_cap, na.rm = TRUE), 
