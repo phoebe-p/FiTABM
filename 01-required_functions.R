@@ -1,3 +1,9 @@
+## Contents
+# 1. Historical scenarios & general - functions
+# 2. Future scenarios - functions
+# 3. Miscellaneous
+
+
 ##################################################################################
 ################# 1. Historical scenarios & general - functions ##################
 ##################################################################################
@@ -1405,3 +1411,33 @@ summarise_results_f <- function(avg_u, cost, cost_priv){
   avg_cost_priv <<- cost_priv %>% group_by(time_series) %>% summarise(cum_cost = mean(cum_cost))
 }
 
+
+##################################################################################
+################################ 3. Miscellaneous ################################
+##################################################################################
+
+consumer_cost <- function(avg_cost, cum_prod_avg, r, start_year, end_year){
+  
+  annual_cost <- avg_cost %>% mutate(year = year(time_series)) %>% group_by(year) %>% 
+    summarise(ann_cost = sum(annual_cost/12)) %>% mutate(n = year - 2008, d = 1/(1+r)^n, d_cost = d*ann_cost) %>%
+    filter(year < end_year) %>% select(year, ann_cost, d, d_cost)
+  
+  d_cost <- annual_cost %>% summarise(cost = sum(d_cost)) %>% unlist
+  cat("Discounted FiT cost up to ", end_year, " = Â£", d_cost/1e9, " billion", sep = "", "\n")
+  
+  ann_prod <- cum_prod_avg %>% mutate(year = year(time_series)) %>% group_by(year) %>% 
+    summarise(ann_prod = sum(current_prod/12)) %>% filter(year < end_year)
+  
+  if(max(ann_prod$year) < end_year) {
+    ann_prod_n <- data.frame(year = (max(ann_prod$year)+1):(end_year - 1), ann_prod = tail(cum_prod_avg$current_prod, 1))
+    ann_prod <- rbind(ann_prod, ann_prod_n)
+  }
+  
+  ann_prod %<>% select(ann_prod)
+  
+  ann_prod %<>% mutate(value = 0.03*ann_prod)
+  cost_to_cons <- cbind(ann_prod, annual_cost) %>% mutate(cost = (ann_cost - value)*d) 
+  
+  cat("Discounted cost to consumers up to ", end_year, " = Â£", sum(cost_to_cons$cost)/1e9, " billion", sep = "", "\n")
+  
+}
