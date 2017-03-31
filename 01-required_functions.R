@@ -64,12 +64,6 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
     arrange(Region) %>% mutate(Label = LETTERS[1:11])
   
   
-  #---------------------------------------------------------#
-  # Income data
-  
-  
-  income_data <<- read_csv("Data/Incomelist.csv", col_names = FALSE, col_types = cols())
-  
   
   #---------------------------------------------------------#
   # Feed-in tariff data
