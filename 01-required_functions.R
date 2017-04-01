@@ -901,13 +901,6 @@ load_data_f <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, 
   
   
   #---------------------------------------------------------#
-  # Income data
-  
-  
-  income_data <<- read_csv("Data/Incomelist.csv", col_names = FALSE, col_types = cols())
-  
-  
-  #---------------------------------------------------------#
   # Feed-in tariff data
   
   set_FiT_f(start_date, end_date, FiT_end_date, FiT_type, red_frac, init_fit, final_fit, exp_tar)
