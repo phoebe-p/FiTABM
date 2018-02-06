@@ -10,19 +10,22 @@
 # Say we want to run the realistic historical scenario (e.g. the one that 
 # is designed to mimic what actually happened in the Great Britain 2010-2016.)
 # This is the default for the data loading function:
+source('01-required_functions.R')
+source('02-run_functions.R')
 
 load_data()
 
 # To run the simulation:
 
-batch_run_func(number_of_agents = 500)
+results <- batch_run_func(number_of_runs = 10, number_of_agents = 500)
 
-# The default number of agents is 5000, and the default number of runs is 10. So just running batch_run_func() does
-# 10 runs with 5000 agents. I've put number_of_agents = 500 here to speed things up.
+# The default number of agents is 5000, and the default number of runs is 100. 
+# So just running batch_run_func() does 100 runs with 5000 agents. 
+# I've put number_of_agents = 500 and number_of_runs = 10 here to speed things up.
 
 # batch_run_func will automatically plot data and output some key results. If you want to save your data:
 
-batch_run_func(save_name = "test")
+batch_run_func(number_of_runs = 2, number_of_agents = 500, save_name = "test")
 
 
 ## Realistic future
@@ -34,7 +37,7 @@ batch_run_func(save_name = "test")
 generate_populations_f(n_agents = 500, n_pop = 5, dev = 200)
 
 # This generates 5 populations of 500 agents, which deviate less than 200 MW from the capacity as it was in
-# October 2016 (this isn't very good - but generating 10 populations of 5000 agents which deviate < 25 MW
+# October 2016 (this isn't very good - but generating 100 populations of 5000 agents which deviate < 25 MW
 # is extremely time-consuming!)
 
 

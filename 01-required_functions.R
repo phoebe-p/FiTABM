@@ -33,8 +33,8 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
   # DO NOT USE plyr LIBRARY 
   if (FiT_type == "real_h"){
     start_date <- "1jan2010"
-    FiT_end_date <- "1sep2016"
-    end_date <- "1sep2016"
+    FiT_end_date <- "1oct2016"
+    end_date <- "1oct2016"
     if (end_date < FiT_end_date) end_date <- FiT_end_date
   }
   
@@ -116,13 +116,13 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
   
   rm(mean, median, i, means, medians)
   
-  
+ 
   #---------------------------------------------------------#
   # Real deployment data
   if(exists("deployment")) {
     cat("\nDeployment data is already loaded - if you want to reload it, delete the 'deployment' variable\n")
   } else {
-    ts <- seq(dmy("01jan2010"), end_date + months(1), by = '1 month')
+    ts <- seq(dmy("01jan2010"), end_date, by = '1 month')
     
     all_inst_cap <- process_inst_data() %>% 
       filter(technology_type == "Photovoltaic", installed_capacity <= 10, installationtype == "Domestic")
@@ -145,15 +145,13 @@ load_data <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, in
 }
 
 load_libraries <- function(){
-  library(readr)
-  library(dplyr)
-  library(purrr)
-  library(ggplot2)
+  library(tidyverse)
   library(stringr)
   library(reshape2)
   library(lubridate)
   library(magrittr)
 }
+
 
 process_inst_data <- function(){
   a <- read_csv("Data/all_inst_1.csv", skip = 2, col_types = cols())
@@ -948,7 +946,6 @@ load_data_f <- function(start_date, end_date, FiT_end_date, FiT_type, red_frac, 
   income_thresh <<- means$income
   
   rm(mean, median, i, means, medians)
-  
   
   #---------------------------------------------------------#
   # Real deployment data

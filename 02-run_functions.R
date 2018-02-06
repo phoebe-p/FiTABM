@@ -4,33 +4,29 @@
 
 #--------------------------------- Batch runs -----------------------------------#
 
-batch_run_func <- function(w, t, number_of_agents, 
+batch_run_func <- function(number_of_agents, 
                            number_of_runs, plot_u = T, plot_cost = T, plot_prod = T, save_name) {
   
-  # Set threshold and weights, electricity price
-  if(missing(w)) w <- c(0.27, 0.25, 0.05, 0.43) # Weights: income & social, economic, capital
+  allowed_params <- read_tsv('Data/allowed_params_1000.txt', col_names = F)
   
-  if(missing(t)) threshold <- 0.74 # Adoption threshold
-  else threshold <- t
+  sample_for_run <- allowed_params[sample(1:nrow(allowed_params), number_of_runs, replace = TRUE), ]
   
   if(missing(number_of_agents)) number_of_agents <- 5000
-  
-  if(missing(number_of_runs)) number_of_runs <- 10 
-  
-  try(if(signif(sum(w), digits = 6) != 1) stop("Your weights don't add up to 1!"))
+  if(missing(number_of_runs)) number_of_runs <- 100
   
   initialise_vars() # create variables which will store output
   
-  for (i in 1:number_of_runs) {
-    
+  for (i1 in 1:number_of_runs) {
+    w <- unlist(sample_for_run[i1, 1:4])
+    threshold <- unlist(sample_for_run[i1, 5])
     if (run_w_cap == TRUE) { # Reset to original values for new run 
       FiT <<- FiT_0
       dep_cap <<- dep_cap_0
     }
     
-    print(i)
+    cat(i1, w, threshold, "\n")
     
-    all_res_rn <<- run_model(number_of_agents, i, w, threshold) # run the model once 
+    all_res_rn <<- run_model(number_of_agents, i1, w, threshold) # run the model once 
     
     append_results() # add results of current run to previous results
     
@@ -112,7 +108,6 @@ batch_run_func <- function(w, t, number_of_agents,
           geom_line(data = averages, aes(x = time_series, y = tot_inst_cap), color = "black", size = 1) +
           annotate("text", x = dmy("01jul2011"), y = 2000, label = print_vars))
   
-  
   if(missing(save_name)){
     cat("\n", "Data not being saved!", "\n", sep = "")
   } else {
@@ -125,33 +120,11 @@ batch_run_func <- function(w, t, number_of_agents,
     if (run_w_cap == TRUE) write_rds(FiT_levels, paste(save_name, "_FiT_levels.rds", sep = ""))
   }
   
+    to_return <- list(avg_u, cost, cost_priv, LCOE_data, LCOE_avg, FiT)
+    
+    if (run_w_cap == TRUE) to_return <- list(avg_u, cost, cost_priv, LCOE_data, LCOE_avg, FiT, FiT_levels)
   
-  tot_subs_cost <<- sum(avg_cost$annual_cost)/12
-  tot_priv_cost <<- tail(avg_cost_priv$cum_cost, 1)
-  tot_overall_cost <<- tot_subs_cost + tot_priv_cost
-  
-  dep_sd <- sd(avg_u$tot_inst_cap[avg_u$time_series == max(avg_u$time_series)])
-  subs_sd <- cost %>% group_by(run_number) %>% summarise(subs = sum(annual_cost)/12) %>% 
-    select(subs) %>% unlist %>% sd
-  priv_sd <- cost_priv %>% group_by(run_number) %>% summarise(priv = max(cum_cost)) %>% 
-    select(priv) %>% unlist %>% sd
-  ann_sd <- cost %>% group_by(run_number) %>% summarise(ann = max(annual_cost)) %>%
-    select(ann) %>% unlist %>% sd 
-  prod_sd <- cum_prod %>% group_by(run_number) %>% summarise(prod = sum(current_prod)/12) %>%
-    select(prod) %>% unlist %>% sd
-  
-  cat("Final deployment at ", as.character(tail(averages$time_series, 1)), " (MW) = ", 
-      tail(averages$tot_inst_cap, 1), " +/- ", dep_sd, "\n",
-      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, " +/- ", subs_sd/1e9, "\n",
-      "Total private cost (billion £) = ", tot_priv_cost/1e9, " +/- ", priv_sd/1e9, "\n",
-      "Total cost (billions £) = ", tot_overall_cost/1e9, "\n",
-      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, " +/- ", ann_sd/1e6, "\n",
-      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), " +/- ", prod_sd/1e6, "\n",
-      "Weighted LCOE (£/MWh) = ", mean(LCOE_avg), "\n",
-      sep = "")
-  
-  
-  return(sum_abs_diff)
+  return(to_return)
   
 }
 
@@ -383,21 +356,17 @@ run_model <- function(number_of_agents, rn, w, threshold) {
 
 #--------------------------------- Batch runs -----------------------------------#
 
-batch_run_func_f <- function(w, t, agent_name, 
+batch_run_func_f <- function(agent_name, 
                              number_of_runs, plot_u = T, plot_cost = T, plot_prod = T, save_name) {
-  
+  allowed_params <- read_tsv('Data/allowed_params_1000.txt', col_names = F)
   # Set threshold and weights, electricity price
-  if(missing(w)) w <- c(0.27, 0.25, 0.05, 0.43) # Weights: income & social, economic, capital
-  
-  if(missing(t)) threshold <- 0.74 # Adoption threshold
-  else threshold <- t
-  
+  sample_for_run <- allowed_params[sample(1:nrow(allowed_params), number_of_runs, replace = TRUE), ]
+
   if(missing(agent_name)) agent_name <- "agents"
-  number_of_agents <- length(read_rds(paste(agent_name, "_1.rds", sep = "")))
+  number_of_agents <- length(read_rds(paste('Data/', agent_name, "_1.rds", sep = "")))
   
-  if(missing(number_of_runs)) number_of_runs <- 10 
+  if(missing(number_of_runs)) number_of_runs <- 100 
   
-  try(if(signif(sum(w), digits = 6) != 1) stop("Your weights don't add up to 1!"))
   
   initialise_vars() # create variables which will store output
   
@@ -406,15 +375,17 @@ batch_run_func_f <- function(w, t, agent_name,
   #    dep_cap_0 <<- dep_cap
   #  }
   
-  for (i in 1:number_of_runs) {
+  for (i1 in 1:number_of_runs) {
     
     if (run_w_cap == TRUE) {
       FiT <<- FiT_0
       dep_cap <<- dep_cap_0
     }
-    print(i)
+    w <- unlist(sample_for_run[i1, 1:4])
+    threshold <- unlist(sample_for_run[i1, 5])
+    print(i1)
     
-    all_res_rn <<- run_model_f(agent_name, i, w, threshold) # run the model once 
+    all_res_rn <<- run_model_f(agent_name, i1, w, threshold) # run the model once 
     
     append_results() # add results of current run to previous results
     
@@ -505,7 +476,6 @@ batch_run_func_f <- function(w, t, agent_name,
           geom_line(data = averages, aes(x = time_series, y = tot_inst_cap), color = "black", size = 1) +
           annotate("text", x = dmy("01jul2011"), y = 2000, label = print_vars))
   
-  
   if(missing(save_name)){
     cat("\n", "Data not being saved!", "\n", sep = "")
   } else {
@@ -518,33 +488,11 @@ batch_run_func_f <- function(w, t, agent_name,
     if (run_w_cap == TRUE) write_rds(FiT_levels, paste(save_name, "_FiT_levels.rds", sep = ""))#
   }
   
+  to_return <- list(avg_u, cost, cost_priv, LCOE_data, LCOE_avg, FiT)
   
-  tot_subs_cost <<- sum(avg_cost$annual_cost)/12
-  tot_priv_cost <<- tail(avg_cost_priv$cum_cost, 1)
-  tot_overall_cost <<- tot_subs_cost + tot_priv_cost
+  if (run_w_cap == TRUE) to_return <- list(avg_u, cost, cost_priv, LCOE_data, LCOE_avg, FiT, FiT_levels)
   
-  dep_sd <- sd(avg_u$tot_inst_cap[avg_u$time_series == max(avg_u$time_series)])
-  subs_sd <- cost %>% group_by(run_number) %>% summarise(subs = sum(annual_cost)/12) %>% 
-    select(subs) %>% unlist %>% sd
-  priv_sd <- cost_priv %>% group_by(run_number) %>% summarise(priv = max(cum_cost)) %>% 
-    select(priv) %>% unlist %>% sd
-  ann_sd <- cost %>% group_by(run_number) %>% summarise(ann = max(annual_cost)) %>%
-    select(ann) %>% unlist %>% sd 
-  prod_sd <- cum_prod %>% group_by(run_number) %>% summarise(prod = sum(current_prod)/12) %>%
-    select(prod) %>% unlist %>% sd
-  
-  cat("Final deployment at ", as.character(tail(averages$time_series, 1)), " (MW) = ", 
-      tail(averages$tot_inst_cap, 1), " +/- ", dep_sd, "\n",
-      "Total subsidy cost (billions £) = ", tot_subs_cost/1e9, " +/- ", subs_sd/1e9, "\n",
-      "Total private cost (billion £) = ", tot_priv_cost/1e9, " +/- ", priv_sd/1e9, "\n",
-      "Total cost (billions £) = ", tot_overall_cost/1e9, "\n",
-      "Maximum annual cost (millions £) = ", max(avg_cost$annual_cost)/1e6, " +/- ", ann_sd/1e6, "\n",
-      "Total production (GWh) = ", sum(cum_prod_avg$current_prod)/(12*1e6), " +/- ", prod_sd/1e6, "\n",
-      "Weighted LCOE (£/MWh) = ", mean(LCOE_avg), "\n",
-      sep = "")
-  
-  
-  return()
+  return(to_return)
   
 }
 
@@ -553,13 +501,13 @@ batch_run_func_f <- function(w, t, agent_name,
 run_model_f <- function(agent_name, rn, w, threshold) {
   
   # Set up some parameters
-  
+  agent_index <- sample.int(10, 1)
   
   time_steps <- nrow(FiT) # number of months in time series
   
   # agents must be generated before run
   
-  agents <- read_rds(paste("agents_", rn, ".rds", sep = ""))
+  agents <- read_rds(paste('Data/', agent_name, "_", agent_index, ".rds", sep = ""))
   number_of_agents <- length(agents)
   
   # initial reference capacity:

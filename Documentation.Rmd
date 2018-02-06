@@ -21,7 +21,7 @@ Although FiTABM was written in RStudio, there is no reason it won't work in a di
 
 Once you have R/RStudio and the right packages:
 
-1.  Download the FiTABM repository from https://github.com/phoebe-p/FiTABM (Clone or download -> Download ZIP), or create a clone if you prefer
+1.  Download the FiTABM repository from https://github.com/phoebe-p/FiTABM (Clone or download -> Download ZIP)
 
 2.  Extract the zip file into your preferred location (best to put the files in their own folder)
 
@@ -29,14 +29,17 @@ Once you have R/RStudio and the right packages:
 
 4.  The functions which form the basis of the program rely on the following R packages:
     
-    readr, dplyr, purrr, ggplot2, stringr, reshape2, lubridate, magrittr
+    tidyverse, stringr, reshape2, lubridate, magrittr
     
     You can install these yourself, e.g by running the following line of R code:
     
-    install.packages(c("readr", "dplyr", "purrr", "ggplot2", "stringr", "reshape2", "lubridate", "magrittr"))
+    install.packages(c("tidyverse", "stringr", "reshape2", "lubridate", "magrittr"))
 
-5.  To actually load the functions into your global environment, run all the contents of 01-required_functions.R and 02-run_functions.R (Ctrl/Cmd + A, Ctrl/Cmd + Enter in RStudio). All the functions you need are now in your Global Environment.
-
+5.  To actually load the functions into your R global environment, run all the contents of 01-required_functions.R and 02-run_functions.R (Ctrl/Cmd + A, Ctrl/Cmd + Enter in RStudio, or just do:
+    
+    source('01-required_functions.R')
+    source('02-run_functions.R')
+    
 6.  Now you can start running simulations!
 
 # File list
@@ -44,9 +47,9 @@ Once you have R/RStudio and the right packages:
 1. FiTABM.Rproj -- RStudio project
 2. 01-required_functions.R -- contains most of the necessary functions, except those for running in batches & actually executing the model.
 3. 02-run_functions.R -- contains the functions for individual and batch runs; all functions called by the individual run function are defined in 01-required_functions.R
-4. Documentation -- this document
-5. In the folder *Data*:
+4. In the folder *Data*:
     + all_inst_1.csv and all_inst_2.csv -- data on individual PV installations in the UK. Big files!
+    + allowed_params_1000.txt -- allowed parameter sets from which the model runs sample. Result of calibration as described in paper.
     + electricityprices.csv -- estimated electricity prices in the UK (annual, 2010-2016)
     + FiT_levels.csv -- Real feed-in tariff (FiT) levels in Great Britain (monthly, 2010-2016)
     + LF_mean.csv -- Solar PV load factors per GB region
@@ -56,8 +59,6 @@ Once you have R/RStudio and the right packages:
     + population_mid2012.csv -- population estimates per GB region, from 2012
     + PV_cost_data_est.csv -- PV cost data used in the model (monthly, 2010-2016)
     + real_dep_cap.csv -- Deployment caps implement on FiT scheme from October 2016
-6. README.md 
-
 
 # Historical simulations
 
